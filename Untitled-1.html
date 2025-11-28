@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHASE: Complete Game Rules & Simulator</title>
+    <!-- Load Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better readability and mobile experience */
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s;
+        }
+        .gradient-text {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        /* Style for the collapsible summary/details elements */
+        details summary {
+            cursor: pointer;
+            list-style: none;
+            padding: 0.5rem 0;
+            outline: none;
+        }
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+        details summary::before {
+            content: '+';
+            font-size: 1.25rem;
+            line-height: 1;
+            margin-right: 0.75rem;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        details[open] summary::before {
+            content: '-';
+            transform: rotate(0deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <div class="w-full min-h-screen text-white p-4 sm:p-8 overflow-auto">
+        <div class="max-w-5xl mx-auto">
+            <!-- Main Title -->
+            <h1 class="text-4xl sm:text-5xl font-extrabold mb-2 text-center bg-gradient-to-r from-red-500 via-purple-500 to-blue-500 gradient-text">
+                CHASE
+            </h1>
+            <p class="text-center text-lg sm:text-xl text-gray-400 mb-6">complete game rules & team builder v2.0</p>
+
+            <!-- Share Link Button -->
+            <div class="text-center mb-10">
+                <button id="shareButton" onclick="copyLink()"
+                        class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition duration-200 focus:outline-none focus:ring-4 focus:ring-purple-500 focus:ring-opacity-50 text-sm">
+                    <span id="share-message">copy share link</span>
+                </button>
+                <p class="text-xs text-gray-500 mt-2">share this file's url with your teammates!</p>
+            </div>
+
+            <div class="space-y-8">
+
+                <!-- game overview -->
+                <section class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl">
+                    <h2 class="text-2xl sm:text-3xl font-bold mb-4 text-blue-400 flex items-center">
+                        <span class="mr-2">🎮</span> game overview
+                    </h2>
+                    <p class="text-gray-300 mb-4">
+                        <strong>chase</strong> is an asymmetric strategy board game where 9 runners attempt to escape from 18 chasers over a maximum of 30 days.
+                    </p>
+                    <ul class="list-disc list-inside text-gray-300 space-y-2 ml-4">
+                        <li><strong>player count:</strong> 2 players or 2 teams</li>
+                        <li><strong>game duration:</strong> maximum 30 days (rounds)</li>
+                        <li><strong>complexity:</strong> high strategic depth</li>
+                    </ul>
+                </section>
+
+                <!-- runners (interactive section) -->
+                <section class="bg-blue-900/30 rounded-xl p-6 border border-blue-700 shadow-xl">
+                    <h2 class="text-2xl sm:text-3xl font-bold mb-4 text-blue-400 flex items-center">
+                        <span class="mr-2">👥</span> runners (team builder)
+                    </h2>
+
+                    <!-- hp/movement calculation display -->
+                    <div class="bg-blue-800/50 p-3 rounded-lg mb-4 flex justify-between items-center text-sm font-mono border border-blue-600">
+                        <p>total max hp: <span id="runner-hp" class="text-lg font-bold text-yellow-300">47</span></p>
+                        <p>total pieces: <span id="runner-count" class="text-lg font-bold text-yellow-300">9</span></p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="runner-pieces">
+                        <!-- jumper -->
+                        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-sky-400 mb-2 flex items-center justify-between">
+                                <span class="flex items-center"><span class="mr-2">🦘</span> jumpers (hp: 5)</span>
+                                <input type="number" id="jumper" value="3" min="0" max="9" data-hp="5" data-shield="0" class="w-16 bg-gray-700 text-center rounded text-sm text-sky-300" onchange="calculateRunnerStats()">
+                            </h3>
+                            <p class="text-sm text-gray-300">movement: 3×1 tile</p>
+                            <p class="text-xs text-gray-400 mt-1">can jump over obstacles</p>
+                        </div>
+                        <!-- sprinter -->
+                        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-blue-400 mb-2 flex items-center justify-between">
+                                <span class="flex items-center"><span class="mr-2">🏃</span> sprinters (hp: 5)</span>
+                                <input type="number" id="sprinter" value="2" min="0" max="9" data-hp="5" data-shield="0" class="w-16 bg-gray-700 text-center rounded text-sm text-blue-300" onchange="calculateRunnerStats()">
+                            </h3>
+                            <p class="text-sm text-gray-300">movement: 3×2 tiles</p>
+                            <p class="text-xs text-gray-400 mt-1">only piece with 2-tile increments</p>
+                        </div>
+                        <!-- tanker -->
+                        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-green-400 mb-2 flex items-center justify-between">
+                                <span class="flex items-center"><span class="mr-2">🛡️</span> tankers (hp: 3, shield: 3)</span>
+                                <input type="number" id="tanker" value="2" min="0" max="9" data-hp="3" data-shield="3" class="w-16 bg-gray-700 text-center rounded text-sm text-green-300" onchange="calculateRunnerStats()">
+                            </h3>
+                            <p class="text-sm text-gray-300">movement: 3×1 tile</p>
+                            <p class="text-xs text-gray-400 mt-1">shield regens +1/day when damaged (max 5)</p>
+                        </div>
+                        <!-- trapper -->
+                        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-orange-400 mb-2 flex items-center justify-between">
+                                <span class="flex items-center"><span class="mr-2">💣</span> trapper (hp: 6)</span>
+                                <input type="number" id="trapper" value="1" min="0" max="9" data-hp="6" data-shield="0" class="w-16 bg-gray-700 text-center rounded text-sm text-orange-300" onchange="calculateRunnerStats()">
+                            </h3>
+                            <p class="text-sm text-gray-300">movement: 3 tiles</p>
+                            <p class="text-xs text-gray-400 mt-1">lays 3 traps/day (max 15), 20-tile radius, -1 move per trap</p>
+                        </div>
+                        <!-- healer -->
+                        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-pink-400 mb-2 flex items-center justify-between">
+                                <span class="flex items-center"><span class="mr-2">💚</span> healer (hp: 4)</span>
+                                <input type="number" id="healer" value="1" min="0" max="9" data-hp="4" data-shield="0" class="w-16 bg-gray-700 text-center rounded text-sm text-pink-300" onchange="calculateRunnerStats()">
+                            </h3>
+                            <p class="text-sm text-gray-300">movement: 3×1 tile</p>
+                            <p class="text-xs text-gray-400 mt-1">heals 2 hp to ally, 3-day cooldown</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- chasers (interactive section) -->
+                <section class="bg-red-900/30 rounded-xl p-6 border border-red-700 shadow-xl">
+                    <h2 class="text-2xl sm:text-3xl font-bold mb-4 text-red-400 flex items-center">
+                        <span class="mr-2">⚔️</span> chasers (team builder)
+                    </h2>
+
+                    <!-- hp calculation display -->
+                    <div class="bg-red-800/50 p-3 rounded-lg mb-4 flex justify-between items-center text-sm font-mono border border-red-600">
+                        <p>total max hp: <span id="chaser-hp" class="text-lg font-bold text-yellow-300">37</span></p>
+                        <p>total pieces: <span id="chaser-count" class="text-lg font-bold text-yellow-300">18</span></p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="chaser-pieces">
+                        <!-- soldier -->
+                        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-gray-300 mb-2 flex items-center justify-between">
+                                <span class="flex items-center"><span class="mr-2">⚔️</span> soldiers (hp: 2)</span>
+                                <input type="number" id="soldier" value="10" min="0" max="18" data-hp="2" class="w-16 bg-gray-700 text-center rounded text-sm text-gray-300" onchange="calculateChaserStats()">
+                            </h3>
+                            <p class="text-sm text-gray-300">move: 2 tiles | range: 4 tiles | damage: 1 hp</p>
+                        </div>
+                        <!-- general -->
+                        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-yellow-400 mb-2 flex items-center justify-between">
+                                <span class="flex items-center"><span class="mr-2">👑</span> generals (hp: 3)</span>
+                                <input type="number" id="general" value="4" min="0" max="18" data-hp="3" class="w-16 bg-gray-700 text-center rounded text-sm text-yellow-300" onchange="calculateChaserStats()">
+                            </h3>
+                            <p class="text-sm text-gray-300">move: 3 tiles | range: 6 tiles | damage: 2 hp</p>
+                        </div>
+                        <!-- sniper -->
+                        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-red-400 mb-2 flex items-center justify-between">
+                                <span class="flex items-center"><span class="mr-2">🎯</span> sniper (hp: 3)</span>
+                                <input type="number" id="sniper" value="1" min="0" max="18" data-hp="3" class="w-16 bg-gray-700 text-center rounded text-sm text-red-300" onchange="calculateChaserStats()">
+                            </h3>
+                            <p class="text-sm text-gray-300">move: 2 tiles | range: 10 tiles | damage: 2 hp | shoots through obstacles</p>
+                        </div>
+                        <!-- steady -->
+                        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-cyan-400 mb-2 flex items-center justify-between">
+                                <span class="flex items-center"><span class="mr-2">🗿</span> steady (hp: 3)</span>
+                                <input type="number" id="steady" value="1" min="0" max="18" data-hp="3" class="w-16 bg-gray-700 text-center rounded text-sm text-cyan-300" onchange="calculateChaserStats()">
+                            </h3>
+                            <p class="text-sm text-gray-300">move: 3 tiles | range: 3 tiles | damage: 1 hp | regens 1hp/day if not hit</p>
+                        </div>
+                        <!-- scout -->
+                        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-purple-400 mb-2 flex items-center justify-between">
+                                <span class="flex items-center"><span class="mr-2">👁️</span> scout (hp: 3)</span>
+                                <input type="number" id="scout" value="1" min="0" max="18" data-hp="3" class="w-16 bg-gray-700 text-center rounded text-sm text-purple-300" onchange="calculateChaserStats()">
+                            </h3>
+                            <p class="text-sm text-gray-300">move: 8 tiles | range: 3 tiles | damage: 1 hp | trap immune</p>
+                        </div>
+                        <!-- president -->
+                        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-amber-400 mb-2 flex items-center justify-between">
+                                <span class="flex items-center"><span class="mr-2">🎖️</span> president (hp: 4)</span>
+                                <input type="number" id="president" value="1" min="0" max="18" data-hp="4" class="w-16 bg-gray-700 text-center rounded text-sm text-amber-300" onchange="calculateChaserStats()">
+                            </h3>
+                            <p class="text-sm text-gray-300">move: 2 tiles | range: 3 tiles | debuff grenade: 7-tile range, 7-day cooldown</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- collapsible rules sections -->
+
+                <!-- board specifications -->
+                <details open class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl">
+                    <summary class="text-2xl sm:text-3xl font-bold text-green-400 flex items-center">
+                        <span class="mr-2">🗺️</span> board specifications
+                    </summary>
+                    <div class="pt-4 space-y-4">
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-2">board layout</h3>
+                            <ul class="list-disc list-inside text-gray-300 space-y-1 ml-4">
+                                <li><strong>size:</strong> 100 rows × 120 columns = 12,000 hexagonal tiles</li>
+                                <li><strong>shape:</strong> irregular octagonal/hexagonal boundary</li>
+                                <li><strong>total playable tiles:</strong> ~9,500-10,000 tiles</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-2">board features</h3>
+                            <ul class="list-disc list-inside text-gray-300 space-y-1 ml-4">
+                                <li><strong>exit tiles:</strong> 3 tiles in center</li>
+                                <li><strong>obstacles:</strong> 60 clusters (1-3 tiles each)</li>
+                                <li><strong>runner start:</strong> grouped in outer-middle (75% from center)</li>
+                                <li><strong>chaser start:</strong> scattered (min 5 tiles from exits)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- win conditions -->
+                <details open class="bg-gray-800 rounded-xl p-6 border border-yellow-600 shadow-xl">
+                    <summary class="text-2xl sm:text-3xl font-bold text-yellow-400 flex items-center">
+                        <span class="mr-2">🏆</span> win conditions
+                    </summary>
+                    <div class="pt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-xl font-bold text-blue-400 mb-2">runners win:</h3>
+                            <ul class="list-disc list-inside text-gray-300 space-y-1 ml-4">
+                                <li>3+ runners escape via exits, or</li>
+                                <li>all 18 chasers eliminated</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-red-400 mb-2">chasers win:</h3>
+                            <ul class="list-disc list-inside text-gray-300 space-y-1 ml-4">
+                                <li>all 8 runners eliminated, or</li>
+                                <li>survive to day 31 (reinforcements)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- combat mechanics -->
+                <details class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl">
+                    <summary class="text-2xl sm:text-3xl font-bold text-red-400 flex items-center">
+                        <span class="mr-2">⚔️</span> combat & damage
+                    </summary>
+                    <div class="pt-4 space-y-4">
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-2">path interception (new!)</h3>
+                            <p class="text-gray-300">when a runner's movement path crosses a chaser's path: <strong class="text-red-400">1 hp damage</strong> automatically</p>
+                            <p class="text-sm text-gray-400">happens during movement, stacks if crossing multiple paths</p>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-2">debuff grenade</h3>
+                            <p class="text-gray-300">range: 7 tiles | damage: 1 hp | random debuff (1d6):</p>
+                            <ul class="list-disc list-inside text-sm text-gray-400 mt-2 space-y-1 ml-4">
+                                <li>cripple: 50% movement next day</li>
+                                <li>stun: cannot act next day</li>
+                                <li>poison: 1 hp/day for 3 days</li>
+                                <li>malware: reveals 1-2 trap locations to all chasers</li>
+                                <li>weakness: +1 hp damage for entire turn</li>
+                                <li>exhaustion: -1 tile movement for 2 days</li>
+                            </ul>
+                            <p class="text-sm text-gray-400 mt-2">cooldown: 7 days | shield blocks damage but not debuff</p>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-2">traps</h3>
+                            <ul class="list-disc list-inside text-gray-300 space-y-1 ml-4">
+                                <li><strong>spike:</strong> 2 hp damage</li>
+                                <li><strong>stun:</strong> 1 hp + lose next turn</li>
+                                <li><strong>slow:</strong> 1 hp + half speed next day</li>
+                            </ul>
+                            <p class="text-sm text-gray-400 mt-2">single-use, 20-tile placement radius, max 15 on board</p>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- key rules -->
+                <details class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl">
+                    <summary class="text-2xl sm:text-3xl font-bold text-purple-400 flex items-center">
+                        <span class="mr-2">📜</span> key rules
+                    </summary>
+                    <div class="pt-4">
+                        <ul class="list-disc list-inside text-gray-300 space-y-2 ml-4">
+                            <li><strong>simultaneous planning:</strong> both sides submit moves privately each day</li>
+                            <li><strong>exit buffer:</strong> chasers must stay 5+ tiles from exits</li>
+                            <li><strong>no respawns:</strong> eliminated pieces gone permanently</li>
+                            <li><strong>hp cap:</strong> cannot exceed maximum (but shields can reach 5)</li>
+                            <li><strong>trap visibility:</strong> invisible to chasers until triggered</li>
+                            <li><strong>time limit:</strong> 30 days max, day 31 = auto-chaser win</li>
+                        </ul>
+                    </div>
+                </details>
+
+                <!-- strategic elements -->
+                <details class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl">
+                    <summary class="text-2xl sm:text-3xl font-bold text-cyan-400 flex items-center">
+                        <span class="mr-2">🧠</span> strategy
+                    </summary>
+                    <div class="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-blue-400 mb-2">runner tactics</h3>
+                            <ul class="list-disc list-inside text-sm text-gray-300 space-y-1 ml-4">
+                                <li>protect trapper at all costs</li>
+                                <li>use tankers to absorb damage</li>
+                                <li>sprinters for quick escapes</li>
+                                <li>minimize path crossings</li>
+                                <li>balance escape vs elimination</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-red-400 mb-2">chaser tactics</h3>
+                            <ul class="list-disc list-inside text-sm text-gray-300 space-y-1 ml-4">
+                                <li>create killbox corridors</li>
+                                <li>scout finds traps safely</li>
+                                <li>target trapper first</li>
+                                <li>use sniper for obstacles</li>
+                                <li>stall to day 31 if needed</li>
+                            </ul>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- footer -->
+                <div class="text-center text-gray-500 text-sm mt-8 pb-8">
+                    <p class="text-xl font-bold bg-gradient-to-r from-red-500 to-blue-500 gradient-text mb-2">
+                        chase - where every step counts
+                    </p>
+                    <p>v2.0 | asymmetric strategy game</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- interactivity logic ---
+
+        // function to copy the current url to the clipboard
+        function copyLink() {
+            // check if the current environment is running in an iframe, or if navigator.clipboard is available
+            const link = window.location.href;
+            const messageElement = document.getElementById('share-message');
+
+            // use the modern clipboard api
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(link).then(() => {
+                    messageElement.textContent = 'link copied!';
+                    setTimeout(() => {
+                        messageElement.textContent = 'copy share link';
+                    }, 3000);
+                }).catch(err => {
+                    // fallback for permissions error
+                    messageElement.textContent = 'failed to copy. url shown in console.';
+                    console.error('could not copy link:', err);
+                    console.log('the link to share is:', link);
+                });
+            } else {
+                // fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = link;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    messageElement.textContent = 'link copied!';
+                } catch (err) {
+                    messageElement.textContent = 'manual copy failed. url shown in console.';
+                    console.error('manual copy failed:', err);
+                    console.log('the link to share is:', link);
+                }
+                document.body.removeChild(textarea);
+                setTimeout(() => {
+                    messageElement.textContent = 'copy share link';
+                }, 3000);
+            }
+        }
+
+        // runner stats calculation
+        function calculateRunnerStats() {
+            const runnerPieces = document.getElementById('runner-pieces').querySelectorAll('input[type="number"]');
+            let totalHP = 0;
+            let totalShield = 0;
+            let totalPieces = 0;
+
+            runnerPieces.forEach(input => {
+                const count = parseInt(input.value) || 0;
+                const baseHP = parseInt(input.getAttribute('data-hp')) || 0;
+                const baseShield = parseInt(input.getAttribute('data-shield')) || 0;
+
+                totalHP += count * baseHP;
+                totalShield += count * baseShield;
+                totalPieces += count;
+            });
+
+            // update display
+            document.getElementById('runner-hp').textContent = `${totalHP} + ${totalShield} shield = ${totalHP + totalShield}`;
+            document.getElementById('runner-count').textContent = totalPieces;
+
+            // optional: limit total runners to 9, or disable piece if count maxes out
+            const maxRunners = 9;
+            if (totalPieces > maxRunners) {
+                 document.getElementById('runner-count').classList.add('text-red-400');
+                 document.getElementById('runner-hp').classList.add('text-red-400');
+            } else {
+                 document.getElementById('runner-count').classList.remove('text-red-400');
+                 document.getElementById('runner-hp').classList.remove('text-red-400');
+            }
+        }
+
+        // chaser stats calculation
+        function calculateChaserStats() {
+            const chaserPieces = document.getElementById('chaser-pieces').querySelectorAll('input[type="number"]');
+            let totalHP = 0;
+            let totalPieces = 0;
+
+            chaserPieces.forEach(input => {
+                const count = parseInt(input.value) || 0;
+                const baseHP = parseInt(input.getAttribute('data-hp')) || 0;
+
+                totalHP += count * baseHP;
+                totalPieces += count;
+            });
+
+            // update display
+            document.getElementById('chaser-hp').textContent = totalHP;
+            document.getElementById('chaser-count').textContent = totalPieces;
+
+            // optional: limit total chasers to 18
+            const maxChasers = 18;
+            if (totalPieces > maxChasers) {
+                 document.getElementById('chaser-count').classList.add('text-red-400');
+                 document.getElementById('chaser-hp').classList.add('text-red-400');
+            } else {
+                 document.getElementById('chaser-count').classList.remove('text-red-400');
+                 document.getElementById('chaser-hp').classList.remove('text-red-400');
+            }
+        }
+
+        // run calculations on load to show initial correct stats
+        window.onload = function() {
+            calculateRunnerStats();
+            calculateChaserStats();
+        }
+    </script>
+</body>
+</html>
